@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Translation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+
+        #language-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #language-label {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        #language {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #translation-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #translation-label {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        #translation {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/web-speech-api-adapter"></script>
+    <script>
+        $(document).ready(function() {
+            // Function to update the detected language
+            function updateDetectedLanguage(text) {
+                $.ajax({
+                    url: "/language-detection",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ "text": text }),
+                    success: function(response) {
+                        $("#language").text(response.language);
+                    }
+                });
+            }
+        
+            // Event listener for input field
+            $("#input-text").on("input", function() {
+                var text = $(this).val();
+                updateDetectedLanguage(text);
+            });
+        
+            // Translate button click event
+            $("#translate-btn").click(function() {
+                var text = $("#input-text").val();
+                updateDetectedLanguage(text); // Update detected language before translation
+                $.ajax({
+                    url: "/translate",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ "text": text }),
+                    success: function(response) {
+                        $("#translation").text(response.translation);
+                    }
+                });
+            });
+        
+            // Voice input functionality
+            var recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'ja-JP,en-US'; // Set the languages to Japanese and English
+            recognition.interimResults = false; // Disable interim results
+            
+            // Set the timeout duration in milliseconds
+            var timeoutDuration = 5000; // 5 seconds
+            
+            $("#voice-input-btn").click(function() {
+                recognition.start();
+                
+                // Stop listening after the timeout duration
+                setTimeout(function() {
+                    recognition.stop();
+                }, timeoutDuration);
+            });
+        
+            recognition.onresult = function(event) {
+                var transcript = event.results[event.results.length - 1][0].transcript;
+                $("#input-text").val(transcript);
+                updateDetectedLanguage(transcript);
+                recognition.stop();
+            };
+        });
+    </script>
+</head>
+<body>
+    <h1>Translation</h1>
+    <textarea id="input-text" rows="4" placeholder="Enter text..."></textarea>
+    <br>
+    <div id="language-container">
+        <h2 id="language-label">Language:</h2>
+        <p id="language"></p>
+    </div>
+    <button id="translate-btn">Translate</button>
+    <button id="voice-input-btn">Voice Input</button>
+    <div id="translation-container">
+        <h2 id="translation-label">Translation:</h2>
+        <p id="translation"></p>
+    </div>
+</body>
+</html>
