@@ -1,6 +1,6 @@
 
 
-# Translation Application Using Facbooks NLLB Translation Model
+# Translation Application GUI Using Facbooks NLLB Translation Model
 
 This is a translation application developed using FastAPI, PyQt5, Facebook's fairseq library, and other dependencies.
 
